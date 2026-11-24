@@ -40,6 +40,11 @@ if ! command -v docker >/dev/null; then
 fi
 sudo usermod -aG docker "$USER" # takes effect on next login
 
+# The Ubuntu `ttyd` package ships and starts its own system service: a login terminal on 127.0.0.1:7681.
+# It squats on ttyd's default port, so a user ttyd service on 7681 crash-loops, and a tunnel routed to that
+# port would expose a login prompt. Disable it; run ttyd yourself as a user service instead.
+sudo systemctl disable --now ttyd 2>/dev/null || true
+
 log "mise + toolchains"
 command -v mise >/dev/null || curl -fsSL https://mise.run | sh
 mise use -g node@24 python@3.14 aws-cli@latest kubectl@latest eksctl@latest gh@latest glab@latest
