@@ -173,12 +173,11 @@ export TF_VAR_tailscale_auth_key='tskey-auth-<new>'
 terraform apply -replace=oci_core_instance.vps
 ```
 
-## 6. Using cloudflared later
+## 6. Cloudflare tunnel, browser SSH (optional)
 
-The `cloudflared` binary is installed but no tunnel is configured and no service is running. After you can SSH in,
-follow Cloudflare's docs to create a tunnel and `sudo cloudflared service install <token>`. The VM already has
-outbound internet through the NAT gateway, which is all a tunnel needs. Note that sshd has no authorised keys, so
-SSH through a tunnel needs its own login method (e.g. Cloudflare short-lived certificates); that is not set up here.
+The `cloudflared` binary is installed but no tunnel is configured and no service is running. After you can SSH in over
+Tailscale, follow **[docs/cloudflare.md](docs/cloudflare.md)** to add browser SSH and `cloudflared access ssh`. sshd
+has no authorised keys, so that guide uses Cloudflare short-lived certificates as the login method.
 
 ## Variables
 
@@ -218,10 +217,10 @@ Then remove the machine from the Tailscale admin console.
 
 ## Status
 
-`terraform validate` passes and the rendered cloud-config is checked, but this has not yet been applied to a real VM.
-Unverified until the first real boot: cloud-init without the default user, the image's default iptables behaviour,
-and the Minimal image variant (the standard one is not tested either).
-The Tailscale and Cloudflare apt repository URLs used by the bootstrap were checked to exist for Ubuntu 26.04.
+Applied once to a real VM (Ubuntu 26.04.1 aarch64, region ap-hyderabad-1) and confirmed: cloud-init created only the
+configured user (no `ubuntu` user), Tailscale joined and Tailscale SSH logins work, `cloudflared` was installed,
+sshd listens on port 22 with password login disabled, and the image's default iptables rules reject everything inbound
+except SSH. Not tested: the standard-vs-Minimal image difference, and the Cloudflare guide in `docs/`.
 
 ## What is *not* installed
 
