@@ -186,6 +186,15 @@ SSH through a tunnel needs its own login method (e.g. Cloudflare short-lived cer
 - **Always Free limits.** The A1 allowance is 4 OCPU / 24 GB / 200 GB **per account**. A second A1 VM running at the
   same time is billed at pay-as-you-go rates. Lower `ocpus`, `memory_in_gbs` and `boot_volume_size_in_gbs` if you want
   to keep a second machine cheap. A stopped VM still bills its boot volume; destroy to stop all charges.
+- **Image.** By default Terraform picks the newest `Canonical-Ubuntu-24.04-aarch64-*` image in your region. If it
+  reports that none was found, list the images and pick one:
+
+  ```bash
+  oci compute image list --compartment-id <tenancy-ocid> --operating-system "Canonical Ubuntu" \
+    --shape VM.Standard.A1.Flex --all --query 'data[].{name:"display-name",id:id}' --output table
+  ```
+
+  then set `image_ocid = "ocid1.image..."` in `terraform.tfvars`. Use a standard (not Minimal) Arm image.
 - **Capacity.** A1 capacity is intermittent in some regions. `Out of host capacity` means try again later.
 - **Secrets.** The auth key is placed in instance metadata for first boot and is removed from disk once Tailscale is up.
   Use a single-use key so the leftover metadata is worthless. Terraform state contains it too, so keep the state bucket
