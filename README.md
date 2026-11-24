@@ -16,7 +16,7 @@ What you get:
 
 | | |
 |---|---|
-| OS | Ubuntu 24.04 (newest Canonical aarch64 image) |
+| OS | Canonical Ubuntu (aarch64), the image you pick in step 2 |
 | Shape | `VM.Standard.A1.Flex`, 4 OCPU / 24 GB RAM / 200 GB boot volume (the whole Always Free A1 allowance) |
 | Login | one user, `username`, with passwordless sudo. The stock `ubuntu` user is not created |
 | Auth | Tailscale SSH only. No SSH keys exist on the machine |
@@ -101,6 +101,17 @@ cp backend.hcl.example backend.hcl             # set namespace and key
 ```
 
 - `tenancy_ocid`: your tenancy OCID, see "Where to find your OCIDs" in step 1.2.
+- `image_ocid`: the boot image. List the Ubuntu Arm images available in your region:
+
+  ```bash
+  oci compute image list --compartment-id <tenancy-ocid> --operating-system "Canonical Ubuntu" \
+    --shape VM.Standard.A1.Flex --all --query 'data[].{name:"display-name",id:id}' --output table
+  ```
+
+  Copy the `id` of a **standard** image, e.g. the newest `Canonical-Ubuntu-24.04-aarch64-<date>`.
+  Do not pick a `Minimal` one; it lacks packages this setup expects. Make sure the OCID contains your region
+  (e.g. `ocid1.image.oc1.ap-hyderabad-1...`) and that the OCI CLI and Terraform use the same region, which both
+  take from `~/.oci/config`.
 - `namespace` (in `backend.hcl`): the value printed by `oci os ns get`.
 - `key` (in `backend.hcl`): the path of the state file inside the bucket. **It must be unique.** Do not reuse a key
   that any other Terraform project in the same bucket already uses; they would share one state, and Terraform would
@@ -177,7 +188,7 @@ SSH through a tunnel needs its own login method (e.g. Cloudflare short-lived cer
 | `ocpus` / `memory_in_gbs` / `boot_volume_size_in_gbs` | no | `4` / `24` / `200` | Boot volume can only grow later |
 | `vcn_cidr` / `subnet_cidr` | no | `10.1.0.0/16` / `10.1.1.0/24` | Avoid overlap with your other networks |
 | `compartment_ocid` | no | tenancy root | |
-| `image_ocid` | no | newest Ubuntu 24.04 aarch64 | |
+| `image_ocid` | yes | | Standard Ubuntu aarch64 image in your region (step 2) |
 
 ## Good to know
 
@@ -186,15 +197,8 @@ SSH through a tunnel needs its own login method (e.g. Cloudflare short-lived cer
 - **Always Free limits.** The A1 allowance is 4 OCPU / 24 GB / 200 GB **per account**. A second A1 VM running at the
   same time is billed at pay-as-you-go rates. Lower `ocpus`, `memory_in_gbs` and `boot_volume_size_in_gbs` if you want
   to keep a second machine cheap. A stopped VM still bills its boot volume; destroy to stop all charges.
-- **Image.** By default Terraform picks the newest `Canonical-Ubuntu-24.04-aarch64-*` image in your region. If it
-  reports that none was found, list the images and pick one:
-
-  ```bash
-  oci compute image list --compartment-id <tenancy-ocid> --operating-system "Canonical Ubuntu" \
-    --shape VM.Standard.A1.Flex --all --query 'data[].{name:"display-name",id:id}' --output table
-  ```
-
-  then set `image_ocid = "ocid1.image..."` in `terraform.tfvars`. Use a standard (not Minimal) Arm image.
+- **The image is pinned.** `image_ocid` is deliberately explicit, so the VM never changes just because Canonical
+  published a newer image. Image OCIDs are per region.
 - **Capacity.** A1 capacity is intermittent in some regions. `Out of host capacity` means try again later.
 - **Secrets.** The auth key is placed in instance metadata for first boot and is removed from disk once Tailscale is up.
   Use a single-use key so the leftover metadata is worthless. Terraform state contains it too, so keep the state bucket

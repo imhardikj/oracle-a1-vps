@@ -1,3 +1,4 @@
 tenancy_ocid  = "<tenancy-ocid>" # ocid1.tenancy.oc1..xxxx
 instance_name = "vps"
-username      = "username" # your Linux login; match your Cloudflare Access email prefix if you'll use browser SSH
+username      = "username"      # your Linux login; match your Cloudflare Access email prefix if you'll use browser SSH
+image_ocid    = "<image-ocid>"  # ocid1.image.oc1.<region>.xxxx ; see README step 2

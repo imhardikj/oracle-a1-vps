@@ -65,9 +65,13 @@ variable "boot_volume_size_in_gbs" {
 }
 
 variable "image_ocid" {
-  description = "Override the image. Default: newest Canonical Ubuntu 24.04 aarch64 image."
+  description = "OCID of the boot image: a standard (not Minimal) Canonical Ubuntu aarch64 image in your region. See the README for how to list them."
   type        = string
-  default     = null
+
+  validation {
+    condition     = startswith(var.image_ocid, "ocid1.image.")
+    error_message = "image_ocid must be an image OCID (ocid1.image.oc1.<region>....)."
+  }
 }
 
 # --- Network -------------------------------------------------------------------
