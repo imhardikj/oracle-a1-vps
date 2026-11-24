@@ -1,0 +1,54 @@
+#cloud-config
+# Rendered by Terraform (templatefile). Ubuntu 24.04 aarch64 on OCI.
+#
+# `users:` deliberately omits `default`, so the image's stock `ubuntu` user is
+# NOT created; ${username} is the only login account.
+
+hostname: ${hostname}
+fqdn: ${hostname}
+preserve_hostname: false
+manage_etc_hosts: true
+
+disable_root: true
+ssh_pwauth: false
+
+users:
+  - name: ${username}
+    gecos: ${username}
+    shell: /bin/bash
+    groups: [sudo, adm]
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    lock_passwd: true
+
+package_update: true
+package_upgrade: true
+packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - git
+  - htop
+  - jq
+  - tmux
+  - unzip
+  - vim
+  - wget
+
+write_files:
+  # tmpfs; removed by the bootstrap script once Tailscale is up.
+  - path: /run/vps-bootstrap.env
+    owner: root:root
+    permissions: "0600"
+    content: |
+      TS_AUTHKEY=${jsonencode(tailscale_auth_key)}
+      TS_HOSTNAME=${jsonencode(hostname)}
+  - path: /usr/local/sbin/vps-bootstrap.sh
+    owner: root:root
+    permissions: "0700"
+    content: |
+      ${indent(6, bootstrap_script)}
+
+runcmd:
+  - [/usr/local/sbin/vps-bootstrap.sh]
+
+final_message: "vps ready after $UPTIME seconds. Tailscale: see /var/log/vps-bootstrap.log"

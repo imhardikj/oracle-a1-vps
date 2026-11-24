@@ -1,0 +1,7 @@
+# Copy to backend.hcl (git-ignored) and run: terraform init -backend-config=backend.hcl
+bucket    = "terraform-state"
+namespace = "<your-object-storage-namespace>" # oci os ns get
+# IMPORTANT: the key must be unique. Never reuse a key that another Terraform project in the
+# same bucket already uses: they would share one state and Terraform would try to
+# modify or destroy the other project's resources.
+key = "vps/terraform.tfstate"
