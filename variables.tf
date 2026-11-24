@@ -1,12 +1,22 @@
 variable "tenancy_ocid" {
-  description = "OCID of your OCI tenancy."
+  description = "OCID of your OCI tenancy: only the value, starting with ocid1.tenancy."
   type        = string
+
+  validation {
+    condition     = startswith(var.tenancy_ocid, "ocid1.tenancy.")
+    error_message = "tenancy_ocid must be just the OCID, starting with \"ocid1.tenancy.\". If you copied a line from ~/.oci/config, remove the leading \"tenancy=\"."
+  }
 }
 
 variable "compartment_ocid" {
   description = "Compartment for all resources. Defaults to the tenancy (root) compartment."
   type        = string
   default     = null
+
+  validation {
+    condition     = var.compartment_ocid == null || startswith(var.compartment_ocid, "ocid1.compartment.") || startswith(var.compartment_ocid, "ocid1.tenancy.")
+    error_message = "compartment_ocid must be a compartment OCID (ocid1.compartment....)."
+  }
 }
 
 variable "instance_name" {
@@ -65,7 +75,7 @@ variable "boot_volume_size_in_gbs" {
 }
 
 variable "image_ocid" {
-  description = "OCID of the boot image: a standard (not Minimal) Canonical Ubuntu aarch64 image in your region. See the README for how to list them."
+  description = "OCID of the boot image: a Canonical Ubuntu aarch64 image (standard or Minimal) in your region. See the README for how to list them."
   type        = string
 
   validation {
