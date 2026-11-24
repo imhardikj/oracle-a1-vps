@@ -43,7 +43,9 @@ sudo usermod -aG docker "$USER" # takes effect on next login
 log "mise + toolchains"
 command -v mise >/dev/null || curl -fsSL https://mise.run | sh
 mise use -g node@24 python@3.14 aws-cli@latest kubectl@latest eksctl@latest gh@latest glab@latest
-# npm globals go to ~/.local (stable across node upgrades; its bin dir is already on PATH)
+# npm globals go to ~/.local (stable across node upgrades; its bin dir is already on PATH).
+# Without this they land inside mise's per-version node directory and vanish on a node upgrade.
+# Note: this writes ~/.npmrc; if you later replace ~/.npmrc, re-run this line.
 npm config set prefix "$HOME/.local"
 
 log "bun, uv"
@@ -70,7 +72,15 @@ command -v pi >/dev/null || npm install -g @earendil-works/pi-coding-agent
 command -v t3 >/dev/null || npm install -g t3@nightly
 
 log "installed versions"
+version_of() {
+  case "$1" in
+    kubectl) kubectl version --client 2>&1 ;;
+    eksctl) eksctl version 2>&1 ;;
+    tmux) tmux -V 2>&1 ;;
+    *) "$1" --version 2>&1 ;;
+  esac | head -1
+}
 for c in git docker node npm python3 aws kubectl eksctl gh glab bun uv rg tmux claude opencode codex pi t3; do
-  printf '%-10s %s\n' "$c" "$({ "$c" --version 2>&1 || true; } | head -1)"
+  printf '%-10s %s\n' "$c" "$(version_of "$c" || true)"
 done
 log "done. Log out and back in so the docker group and PATH apply."
