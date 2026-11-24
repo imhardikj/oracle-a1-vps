@@ -27,6 +27,17 @@ once under each until you remove the old environment from the app.
 3. Copy `snapshot.sqlite` to the new machine and run `scripts/t3-import-db.py snapshot.sqlite /home/OLD /home/NEW`.
 4. Put it at `~/.t3/userdata/statev2.sqlite` **before** T3 has ever started there (or with the service stopped).
 5. Install and start T3: `t3 up --lan --no-connect` (tailnet access with pairing codes; add `--connect` for T3 Connect).
+   Optional, for a browser-friendly HTTPS address on the tailnet (needs "HTTPS Certificates" enabled in the Tailscale
+   admin console, and the login user allowed to manage Tailscale Serve):
+
+   ```bash
+   sudo tailscale set --operator=$USER
+   t3 pair --tailscale --ttl 2m --label serve-setup   # configures Tailscale Serve; persists across restarts
+   # -> https://<machine>.<tailnet>.ts.net/  (tailnet only; the pairing code is still the lock)
+   ```
+
+   Primary/backup routes are a client-side choice: T3 Connect (`t3 up --connect`, needs a one-time sign-in) as the
+   primary route, and the tailnet HTTPS address as the second route in the app.
 6. Check: no failed effects at startup, then `t3 thread list --project <path>`.
 7. **Do not log in to any provider (claude, codex, ...) before step 6 is clean** (see below).
 8. Pair a client: `t3 pair --label <name>` on the VM, then add the environment in the app (`http://<tailnet-name>:3773`).
