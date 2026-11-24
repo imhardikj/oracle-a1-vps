@@ -108,7 +108,8 @@ cp backend.hcl.example backend.hcl             # set namespace and key
     --shape VM.Standard.A1.Flex --all --query 'data[].{name:"display-name",id:id}' --output table
   ```
 
-  Copy the `id` of a **standard** image, e.g. the newest `Canonical-Ubuntu-24.04-aarch64-<date>`.
+  Copy the `id` of a **standard** image, e.g. the newest `Canonical-Ubuntu-26.04-aarch64-<date>`. This setup was written for 26.04 (Tailscale's apt repo
+  must publish a matching release codename; it does for 26.04, `resolute`).
   Do not pick a `Minimal` one; it lacks packages this setup expects. Make sure the OCID contains your region
   (e.g. `ocid1.image.oc1.ap-hyderabad-1...`) and that the OCI CLI and Terraform use the same region, which both
   take from `~/.oci/config`.
@@ -216,5 +217,11 @@ Then remove the machine from the Tailscale admin console.
 ## Status
 
 `terraform validate` passes and the rendered cloud-config is checked, but this has not yet been applied to a real VM.
-Unverified until the first real boot: cloud-init without the default user, the image's default iptables behaviour,
-and the Cloudflare apt repository line.
+Unverified until the first real boot: cloud-init without the default user, and the image's default iptables behaviour.
+The Tailscale and Cloudflare apt repository URLs used by the bootstrap were checked to exist for Ubuntu 26.04.
+
+## What is *not* installed
+
+Only the packages listed under "What you get" are installed. Developer tools (Node, Docker, `gh`, AI coding CLIs, etc.)
+are yours to install after first login. User-level systemd services need `sudo loginctl enable-linger <username>` to
+start at boot without an interactive login.
